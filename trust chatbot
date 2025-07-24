@@ -3,577 +3,900 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trust Advisor Pro</title>
+    <title>Trust Advisor Pro - AI-Powered Trust Recommendations</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .trust-card {
-            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-            border: 2px solid #d1d5db;
-            transition: all 0.3s ease;
+        .chat-message {
+            animation: fadeIn 0.5s ease-in;
         }
-        .trust-card:hover {
-            border-color: #3b82f6;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
-        .recommendation-card {
-            background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-            border: 2px solid #10b981;
+        .typing-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #9CA3AF;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        .typing-indicator:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+        .trust-score {
+            background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+        }
+        .warning-score {
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        }
+        .danger-score {
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="max-w-4xl mx-auto p-4">
+<body class="bg-gray-50 min-h-screen">
+    <div class="max-w-6xl mx-auto p-4">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-t-lg">
+        <div class="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 text-white p-8 rounded-t-xl shadow-lg">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-3xl font-bold">💼 Trust Advisor Pro</h1>
-                    <p class="text-blue-100 mt-1">For High-Net-Worth Individuals ($500K-$3M)</p>
+                    <h1 class="text-4xl font-bold mb-2">🧠 AI Trust Advisor Pro</h1>
+                    <p class="text-blue-100 text-lg">Intelligent Trust Recommendations Based on Your Unique Situation</p>
+                    <p class="text-blue-200 text-sm mt-1">For High-Net-Worth Individuals ($500K-$3M+) • Powered by Advanced Analysis</p>
                 </div>
-                <button onclick="resetChat()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-colors">
-                    🔄 Reset
+                <button onclick="resetChat()" class="bg-white/20 hover:bg-white/30 px-6 py-3 rounded-lg transition-colors font-medium">
+                    🔄 New Session
                 </button>
             </div>
         </div>
 
-        <!-- Chat Container -->
-        <div id="chatContainer" class="bg-white p-6 min-h-96 border-x-2 border-gray-200">
-            <div id="messages">
-                <div class="mb-4">
-                    <div class="bg-gray-100 p-4 rounded-lg max-w-2xl">
-                        <p class="text-gray-800">Hello! I'm your Trust Advisor. I'll help you find the perfect trust structure based on your goals. Let's start with your primary objective:</p>
+        <!-- Main Content Area -->
+        <div class="bg-white shadow-lg rounded-b-xl overflow-hidden">
+            <!-- Chat Messages -->
+            <div id="chatContainer" class="h-96 overflow-y-auto p-6 bg-gradient-to-b from-gray-50 to-white">
+                <div id="messages">
+                    <!-- Initial message will be added by JavaScript -->
+                </div>
+                <div id="typingIndicator" class="hidden mb-4">
+                    <div class="bg-gray-200 p-4 rounded-lg max-w-xs">
+                        <div class="flex space-x-1">
+                            <div class="typing-indicator"></div>
+                            <div class="typing-indicator"></div>
+                            <div class="typing-indicator"></div>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Input Area -->
-        <div class="bg-white p-4 rounded-b-lg border-2 border-t-0 border-gray-200">
-            <div class="flex space-x-3">
-                <input type="text" id="userInput" placeholder="Type your question..." 
-                       class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500">
-                <button onclick="sendMessage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
-                    Send
-                </button>
-            </div>
-        </div>
-
-        <!-- Income Input Section -->
-        <div id="incomeSection" class="mt-4">
-            <div class="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border-2 border-green-200">
-                <div class="text-center mb-4">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-2">💰 Let's Personalize Your Recommendations</h2>
-                    <p class="text-gray-600">Your income helps us suggest the most appropriate trust strategies for your situation</p>
-                </div>
-                
-                <div class="max-w-md mx-auto">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Annual Household Income:</label>
-                    <select id="incomeSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 bg-white">
-                        <option value="">Select your income range...</option>
-                        <option value="500k-750k">$500K - $750K</option>
-                        <option value="750k-1m">$750K - $1M</option>
-                        <option value="1m-1.5m">$1M - $1.5M</option>
-                        <option value="1.5m-2m">$1.5M - $2M</option>
-                        <option value="2m-3m">$2M - $3M</option>
-                        <option value="3m+">$3M+</option>
-                    </select>
-                    
-                    <button onclick="setIncome()" class="w-full mt-4 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg transition-colors font-medium">
-                        Continue to Trust Selection
+            <!-- User Input -->
+            <div class="border-t-2 border-gray-100 p-6 bg-white">
+                <div class="flex space-x-4">
+                    <input type="text" id="userInput" placeholder="Tell me about your situation, goals, income, family, assets, concerns..." 
+                           class="flex-1 border-2 border-gray-300 rounded-xl px-6 py-4 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 text-lg">
+                    <button onclick="sendMessage()" class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-4 rounded-xl transition-all duration-200 font-medium text-lg shadow-lg hover:shadow-xl">
+                        Send
                     </button>
                 </div>
-                
-                <div class="mt-6 text-center">
-                    <p class="text-xs text-gray-500">🔒 Your financial information is private and not stored anywhere</p>
+                <div class="mt-3 flex flex-wrap gap-2">
+                    <button onclick="quickInput('I make $1.2M annually and want to avoid probate while keeping control')" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm transition-colors">
+                        💼 High earner, probate concerns
+                    </button>
+                    <button onclick="quickInput('I have $2M income, own a business, worried about lawsuits')" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm transition-colors">
+                        🛡️ Business owner, lawsuit protection  
+                    </button>
+                    <button onclick="quickInput('I earn $800K, have young children, want tax-efficient wealth transfer')" class="bg-gray-100 hover:bg-gray-200 px-4 py-2 rounded-full text-sm transition-colors">
+                        👨‍👩‍👧‍👦 Family planning, tax efficiency
+                    </button>
                 </div>
             </div>
         </div>
 
-        <!-- Question Options -->
-        <div id="questionOptions" class="mt-4" style="display: none;">
-            <div class="mb-4 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <span class="text-sm font-medium text-blue-800">Your Income Range: </span>
-                        <span id="selectedIncome" class="text-blue-900 font-bold"></span>
+        <!-- Analysis Panel -->
+        <div id="analysisPanel" class="mt-6 hidden">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">🔍 Situation Analysis</h2>
+                <div class="grid md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="font-semibold text-blue-800">Detected Income Range</h3>
+                        <p id="detectedIncome" class="text-blue-600 font-bold text-lg">-</p>
                     </div>
-                    <button onclick="changeIncome()" class="text-blue-600 hover:text-blue-800 text-sm underline">
-                        Change Income
-                    </button>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h3 class="font-semibold text-green-800">Primary Goals</h3>
+                        <p id="detectedGoals" class="text-green-600 font-medium">-</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                        <h3 class="font-semibold text-purple-800">Key Factors</h3>
+                        <p id="detectedFactors" class="text-purple-600 font-medium">-</p>
+                    </div>
                 </div>
-            </div>
-            
-            <div class="grid md:grid-cols-2 gap-4">
-                <button onclick="selectGoal('probate')" class="trust-card p-4 rounded-lg text-left">
-                    <div class="text-2xl mb-2">📋</div>
-                    <h3 class="font-bold text-gray-800">Probate Avoidance & Control</h3>
-                    <p class="text-sm text-gray-600 mt-1">Avoid probate while maintaining flexibility</p>
-                </button>
-                
-                <button onclick="selectGoal('protection')" class="trust-card p-4 rounded-lg text-left">
-                    <div class="text-2xl mb-2">🛡️</div>
-                    <h3 class="font-bold text-gray-800">Asset Protection</h3>
-                    <p class="text-sm text-gray-600 mt-1">Protect from creditors and lawsuits</p>
-                </button>
-                
-                <button onclick="selectGoal('tax')" class="trust-card p-4 rounded-lg text-left">
-                    <div class="text-2xl mb-2">💵</div>
-                    <h3 class="font-bold text-gray-800">Tax Minimization</h3>
-                    <p class="text-sm text-gray-600 mt-1">Reduce estate and income taxes</p>
-                </button>
-                
-                <button onclick="selectGoal('charity')" class="trust-card p-4 rounded-lg text-left">
-                    <div class="text-2xl mb-2">❤️</div>
-                    <h3 class="font-bold text-gray-800">Charitable Giving</h3>
-                    <p class="text-sm text-gray-600 mt-1">Philanthropic planning with tax benefits</p>
-                </button>
-                
-                <button onclick="selectGoal('realestate')" class="trust-card p-4 rounded-lg text-left">
-                    <div class="text-2xl mb-2">🏡</div>
-                    <h3 class="font-bold text-gray-800">Real Estate Transfer</h3>
-                    <p class="text-sm text-gray-600 mt-1">Transfer property to heirs efficiently</p>
-                </button>
-                
-                <button onclick="selectGoal('international')" class="trust-card p-4 rounded-lg text-left">
-                    <div class="text-2xl mb-2">🌐</div>
-                    <h3 class="font-bold text-gray-800">International Planning</h3>
-                    <p class="text-sm text-gray-600 mt-1">Offshore asset protection</p>
-                </button>
+                <div id="trustRecommendations" class="space-y-4">
+                    <!-- Recommendations will be populated here -->
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let userIncome = '';
-        const incomeLabels = {
-            '500k-750k': '$500K - $750K',
-            '750k-1m': '$750K - $1M',
-            '1m-1.5m': '$1M - $1.5M',
-            '1.5m-2m': '$1.5M - $2M',
-            '2m-3m': '$2M - $3M',
-            '3m+': '$3M+'
+        let conversationHistory = [];
+        let userProfile = {
+            income: null,
+            incomeRange: '',
+            goals: [],
+            concerns: [],
+            family: {},
+            assets: {},
+            businessOwner: false,
+            riskTolerance: '',
+            timeHorizon: ''
         };
 
         const trustDatabase = {
-            'revocable_living': {
+            revocable_living: {
                 name: 'Revocable Living Trust',
                 icon: '📋',
                 category: 'Probate Avoidance & Control',
-                description: 'Retains flexibility while ensuring smooth asset transfer at death',
-                benefits: ['Avoid probate process', 'Maintain full control', 'Privacy protection', 'Incapacity planning'],
-                bestFor: 'Individuals wanting flexibility with estate planning',
-                incomeRange: '$500K-$3M+',
-                complexity: 'Low-Medium'
+                description: 'Maintains complete flexibility while avoiding probate and ensuring smooth asset transfer',
+                detailedBenefits: [
+                    'Complete control and flexibility during lifetime',
+                    'Avoids costly and time-consuming probate process',
+                    'Maintains privacy (no public court records)',
+                    'Seamless management during incapacity',
+                    'Easy to modify or revoke',
+                    'No impact on current tax situation'
+                ],
+                bestFor: 'Individuals wanting probate avoidance with maximum flexibility',
+                incomeRange: '$500K+',
+                complexity: 'Low-Medium',
+                setupCost: '$2K-$5K',
+                annualCost: '$500-$1.5K',
+                taxBenefits: 'None (tax-neutral)',
+                assetProtection: 'Minimal (only during incapacity)',
+                keyRequirements: ['Assets must be transferred to trust', 'Successor trustee needed'],
+                warnings: ['No tax benefits', 'No creditor protection', 'Assets still in taxable estate']
             },
-            'minors_trust': {
+            minors_trust: {
                 name: "Minor's Trust (2503(c))",
                 icon: '👶',
-                category: 'Probate Avoidance & Control',
-                description: 'Holds assets until children reach a specified age',
-                benefits: ['Control over minor beneficiaries', 'Tax-efficient gifts', 'Professional management', 'Flexible distribution terms'],
-                bestFor: 'Parents with minor children and significant assets',
-                incomeRange: '$500K-$3M+',
-                complexity: 'Medium'
+                category: 'Family Planning',
+                description: 'Sophisticated trust structure for transferring wealth to minor children with tax advantages',
+                detailedBenefits: [
+                    'Utilizes annual gift tax exclusion ($17,000 per child)',
+                    'Professional asset management for minors',
+                    'Flexible distribution terms and age requirements',
+                    'Tax-efficient wealth transfer',
+                    'Protection from young adult mistakes',
+                    'Can accumulate substantial wealth over time'
+                ],
+                bestFor: 'Parents with significant assets and minor children',
+                incomeRange: '$500K+',
+                complexity: 'Medium',
+                setupCost: '$3K-$7K',
+                annualCost: '$1K-$3K',
+                taxBenefits: 'Gift tax exclusion utilization',
+                assetProtection: 'Protects from beneficiary creditors',
+                keyRequirements: ['Minor children as beneficiaries', 'Annual gift tax returns'],
+                warnings: ['Complex distribution rules', 'Professional management required']
             },
-            'dapt': {
+            dapt: {
                 name: 'Domestic Asset Protection Trust (DAPT)',
                 icon: '🛡️',
                 category: 'Asset Protection',
-                description: 'Strong protection in favorable states like Nevada, Delaware, South Dakota',
-                benefits: ['Lawsuit protection', 'Creditor shielding', 'Retain some benefits', 'State law advantages'],
-                bestFor: 'High-risk professionals, business owners',
-                incomeRange: '$1M-$3M+',
-                complexity: 'High'
+                description: 'Strong creditor protection trust available in favorable states with self-settled spendthrift provisions',
+                detailedBenefits: [
+                    'Excellent protection from future creditors',
+                    'Can retain some beneficial interests',
+                    'Available in 19+ favorable states',
+                    'Professional trustee oversight',
+                    'Flexible distribution standards',
+                    'Estate tax reduction potential'
+                ],
+                bestFor: 'High-risk professionals, business owners, wealthy individuals',
+                incomeRange: '$1M+',
+                complexity: 'High',
+                setupCost: '$15K-$30K',
+                annualCost: '$5K-$15K',
+                taxBenefits: 'Potential estate tax reduction',
+                assetProtection: 'Excellent (with proper timing)',
+                keyRequirements: ['Multi-state planning', 'Professional trustees', 'Minimum funding levels'],
+                warnings: ['Expensive to maintain', 'State law variations', 'Fraudulent transfer risks']
             },
-            'spendthrift': {
+            spendthrift: {
                 name: 'Spendthrift Trust',
                 icon: '💰',
-                category: 'Asset Protection',
-                description: 'Prevents heirs from squandering inheritance and protects from creditors',
-                benefits: ['Protects from beneficiary creditors', 'Prevents wasteful spending', 'Professional oversight', 'Long-term preservation'],
-                bestFor: 'Concerned about heir financial responsibility',
-                incomeRange: '$500K-$3M+',
-                complexity: 'Medium'
+                category: 'Beneficiary Protection',
+                description: 'Protects trust assets from beneficiary creditors and prevents wasteful spending',
+                detailedBenefits: [
+                    'Protects beneficiaries from their own creditors',
+                    'Prevents impulsive spending by beneficiaries',
+                    'Professional trustee oversight and guidance',
+                    'Flexible distribution standards',
+                    'Long-term wealth preservation',
+                    'Protection from divorce settlements'
+                ],
+                bestFor: 'Concerns about beneficiary financial responsibility or creditor issues',
+                incomeRange: '$500K+',
+                complexity: 'Medium',
+                setupCost: '$5K-$10K',
+                annualCost: '$2K-$5K',
+                taxBenefits: 'None (unless part of larger strategy)',
+                assetProtection: 'Excellent for beneficiaries',
+                keyRequirements: ['Professional trustee', 'Clear distribution standards'],
+                warnings: ['Beneficiaries lose direct control', 'Ongoing trustee fees']
             },
-            'grat': {
+            grat: {
                 name: 'Grantor Retained Annuity Trust (GRAT)',
                 icon: '📈',
-                category: 'Tax Minimization',
-                description: 'Transfers appreciating asset growth tax-efficiently to heirs',
-                benefits: ['Move growth outside estate', 'Minimal gift tax impact', 'Retain income stream', 'Ideal for appreciating assets'],
-                bestFor: 'Owners of rapidly appreciating assets',
-                incomeRange: '$1M-$3M+',
-                complexity: 'High'
+                category: 'Advanced Tax Planning',
+                description: 'Transfers appreciation of assets to heirs while minimizing gift tax through retained annuity payments',
+                detailedBenefits: [
+                    'Transfers asset appreciation with minimal gift tax',
+                    'Retains income stream during GRAT term',
+                    'Ideal for rapidly appreciating assets',
+                    'Can be structured as "zeroed-out" GRAT',
+                    'Multiple GRATs can be established',
+                    'Removes future appreciation from estate'
+                ],
+                bestFor: 'Owners of rapidly appreciating assets (business interests, real estate)',
+                incomeRange: '$1M+',
+                complexity: 'Very High',
+                setupCost: '$15K-$40K',
+                annualCost: '$5K-$15K',
+                taxBenefits: 'Significant gift/estate tax savings potential',
+                assetProtection: 'Minimal',
+                keyRequirements: ['Rapidly appreciating assets', 'Complex valuations', 'Professional management'],
+                warnings: ['Must survive GRAT term', 'Complex calculations', 'Interest rate sensitive']
             },
-            'ilit': {
+            ilit: {
                 name: 'Irrevocable Life Insurance Trust (ILIT)',
                 icon: '🏥',
-                category: 'Tax Minimization',
-                description: 'Removes life insurance proceeds from taxable estate',
-                benefits: ['Eliminate estate tax on death benefits', 'Provide liquidity for estate taxes', 'Protect benefits from creditors', 'Multi-generational planning'],
-                bestFor: 'High-net-worth individuals with large life insurance policies',
-                incomeRange: '$1M-$3M+',
-                complexity: 'Medium-High'
+                category: 'Estate Tax Planning',
+                description: 'Removes life insurance proceeds from taxable estate while providing liquidity for estate taxes',
+                detailedBenefits: [
+                    'Removes large death benefits from taxable estate',
+                    'Provides tax-free liquidity for estate taxes',
+                    'Protects insurance proceeds from creditors',
+                    'Multi-generational wealth transfer',
+                    'Flexible premium payment strategies',
+                    'Can be combined with other planning techniques'
+                ],
+                bestFor: 'High-net-worth individuals with substantial life insurance needs',
+                incomeRange: '$1M+',
+                complexity: 'Medium-High',
+                setupCost: '$5K-$15K',
+                annualCost: '$2K-$8K',
+                taxBenefits: 'Removes insurance proceeds from estate tax',
+                assetProtection: 'Excellent for insurance proceeds',
+                keyRequirements: ['Substantial life insurance', 'Annual gift tax filings', 'Crummey powers'],
+                warnings: ['Irrevocable structure', '3-year lookback rule', 'Annual gift considerations']
             },
-            'crt': {
+            idgt: {
+                name: 'Intentionally Defective Grantor Trust (IDGT)',
+                icon: '🔄',
+                category: 'Advanced Tax Planning',
+                description: 'Grantor pays income taxes while assets grow tax-free for beneficiaries through installment sales',
+                detailedBenefits: [
+                    'Grantor pays income tax, benefiting trust growth',
+                    'Installment sale technique for large transfers',
+                    'Significant estate tax savings potential',
+                    'Flexible payment terms',
+                    'Can be combined with other strategies',
+                    'Removes future appreciation from estate'
+                ],
+                bestFor: 'High earners with significant business interests or appreciating assets',
+                incomeRange: '$1.5M+',
+                complexity: 'Very High',
+                setupCost: '$20K-$50K',
+                annualCost: '$8K-$20K',
+                taxBenefits: 'Substantial estate and gift tax savings',
+                assetProtection: 'Moderate',
+                keyRequirements: ['Substantial assets for sale', 'Complex valuations', 'Professional management'],
+                warnings: ['Grantor pays all income taxes', 'Complex structure', 'Professional oversight required']
+            },
+            crt: {
                 name: 'Charitable Remainder Trust (CRT)',
                 icon: '❤️',
-                category: 'Philanthropy',
-                description: 'Retain income now, donate remainder to charity',
-                benefits: ['Immediate tax deduction', 'Income stream for life', 'Capital gains deferral', 'Philanthropic legacy'],
-                bestFor: 'Philanthropically minded with appreciated assets',
-                incomeRange: '$1M-$3M+',
-                complexity: 'Medium-High'
+                category: 'Charitable Planning',
+                description: 'Provides income stream while ultimately benefiting charity, with significant tax advantages',
+                detailedBenefits: [
+                    'Immediate charitable income tax deduction',
+                    'Income stream for life or term of years',
+                    'Capital gains tax deferral on appreciated assets',
+                    'Removes assets from taxable estate',
+                    'Creates philanthropic legacy',
+                    'Flexible payout options (CRUT vs CRAT)'
+                ],
+                bestFor: 'Philanthropically minded individuals with appreciated assets',
+                incomeRange: '$1M+',
+                complexity: 'Medium-High',
+                setupCost: '$5K-$15K',
+                annualCost: '$2K-$8K',
+                taxBenefits: 'Immediate deduction, capital gains deferral',
+                assetProtection: 'Good (assets removed from estate)',
+                keyRequirements: ['Charitable intent', 'Minimum 5% annual payout', 'IRS compliance'],
+                warnings: ['Assets ultimately go to charity', 'Irrevocable commitment', 'Complex payout calculations']
             },
-            'qprt': {
+            clt: {
+                name: 'Charitable Lead Trust (CLT)',
+                icon: '🎁',
+                category: 'Advanced Charitable Planning',
+                description: 'Front-loads charitable gifts while transferring remaining wealth to heirs at reduced transfer tax cost',
+                detailedBenefits: [
+                    'Reduces gift/estate tax on wealth transfers',
+                    'Supports charity during grantor lifetime',
+                    'Transfers wealth to heirs at significant discount',
+                    'Ideal for high net worth families',
+                    'Can be structured as grantor or non-grantor trust',
+                    'Effective with appreciating assets'
+                ],
+                bestFor: 'Ultra-wealthy families with strong charitable intentions',
+                incomeRange: '$2M+',
+                complexity: 'Very High',
+                setupCost: '$20K-$50K',
+                annualCost: '$10K-$25K',
+                taxBenefits: 'Significant transfer tax savings',
+                assetProtection: 'Good for transferred assets',
+                keyRequirements: ['Substantial charitable intent', 'Long-term commitment', 'Professional management'],
+                warnings: ['Very complex', 'Long-term charitable commitment', 'Professional oversight essential']
+            },
+            qprt: {
                 name: 'Qualified Personal Residence Trust (QPRT)',
                 icon: '🏡',
-                category: 'Real Estate Transfer',
-                description: 'Transfer personal residence to heirs at significant discount',
-                benefits: ['Valuation discount', 'Continue living in home', 'Reduce estate taxes', 'Family wealth transfer'],
-                bestFor: 'Owners of valuable primary/vacation homes',
-                incomeRange: '$1M-$3M+',
-                complexity: 'High'
+                category: 'Real Estate Planning',
+                description: 'Transfers residence to heirs at significant valuation discount while retaining occupancy rights',
+                detailedBenefits: [
+                    'Significant valuation discount for gift tax purposes',
+                    'Continue living in residence during trust term',
+                    'Removes future appreciation from estate',
+                    'Ideal for high-value residences',
+                    'Can be used for primary or vacation homes',
+                    'Effective wealth transfer technique'
+                ],
+                bestFor: 'Owners of valuable primary residences or vacation homes',
+                incomeRange: '$1M+',
+                complexity: 'High',
+                setupCost: '$10K-$25K',
+                annualCost: '$3K-$8K',
+                taxBenefits: 'Significant gift tax savings through valuation discount',
+                assetProtection: 'Minimal',
+                keyRequirements: ['High-value residence', 'Must survive trust term', 'Professional valuation'],
+                warnings: ['Must survive trust term', 'Lose residence if die early', 'Rent required after term']
             },
-            'fapt': {
+            fapt: {
                 name: 'Foreign Asset Protection Trust',
                 icon: '🌐',
-                category: 'International',
-                description: 'Protect assets through offshore structures (use with caution)',
-                benefits: ['Strong asset protection', 'International diversification', 'Privacy benefits', 'Creditor deterrent'],
-                bestFor: 'International business owners, significant foreign exposure',
-                incomeRange: '$2M-$3M+',
-                complexity: 'Very High'
+                category: 'International Planning',
+                description: 'Offshore trust structure providing maximum asset protection through foreign jurisdiction benefits',
+                detailedBenefits: [
+                    'Maximum creditor protection available',
+                    'Favorable foreign legal systems',
+                    'International diversification',
+                    'Enhanced privacy protections',
+                    'Deterrent effect on potential litigation',
+                    'Access to international investment opportunities'
+                ],
+                bestFor: 'Ultra-high-net-worth individuals with significant creditor exposure',
+                incomeRange: '$3M+',
+                complexity: 'Extremely High',
+                setupCost: '$50K-$100K+',
+                annualCost: '$25K-$75K+',
+                taxBenefits: 'Potential (complex tax reporting required)',
+                assetProtection: 'Maximum available',
+                keyRequirements: ['Substantial assets', 'Sophisticated professional team', 'Complex compliance'],
+                warnings: ['Extremely expensive', 'Complex tax reporting', 'Political/regulatory risks']
             }
         };
 
-        // Income-based trust suitability
-        const incomeSuitability = {
-            '500k-750k': {
-                highly_suitable: ['revocable_living', 'minors_trust', 'spendthrift'],
-                suitable: ['ilit', 'crt'],
-                consider_carefully: ['dapt', 'grat', 'qprt'],
-                not_recommended: ['fapt']
+        // Natural Language Processing for user input
+        const keywordMapping = {
+            income: {
+                patterns: [/\$?(\d+\.?\d*)\s*k/gi, /\$?(\d+,?\d*)\s*thousand/gi, /\$?(\d+\.?\d*)\s*million/gi, /\$?(\d+,?\d*,?\d*)/g],
+                extract: (text) => {
+                    const patterns = [
+                        { regex: /\$?(\d+\.?\d*)\s*million/gi, multiplier: 1000000 },
+                        { regex: /\$?(\d+\.?\d*)\s*m\b/gi, multiplier: 1000000 },
+                        { regex: /\$?(\d+,?\d*)\s*k\b/gi, multiplier: 1000 },
+                        { regex: /\$?(\d+,?\d*)\s*thousand/gi, multiplier: 1000 },
+                        { regex: /\$?(\d+,?\d*,?\d*)/g, multiplier: 1 }
+                    ];
+                    
+                    for (let pattern of patterns) {
+                        const match = text.match(pattern.regex);
+                        if (match) {
+                            const num = parseFloat(match[0].replace(/[$,km]/gi, ''));
+                            return num * pattern.multiplier;
+                        }
+                    }
+                    return null;
+                }
             },
-            '750k-1m': {
-                highly_suitable: ['revocable_living', 'minors_trust', 'spendthrift', 'ilit'],
-                suitable: ['dapt', 'crt', 'grat'],
-                consider_carefully: ['qprt', 'fapt'],
-                not_recommended: []
+            goals: {
+                probate: ['probate', 'avoid probate', 'probate avoidance', 'no probate', 'bypass probate'],
+                tax: ['tax', 'taxes', 'tax planning', 'estate tax', 'gift tax', 'tax reduction', 'tax efficiency', 'minimize tax'],
+                protection: ['protect', 'protection', 'asset protection', 'creditor', 'lawsuit', 'liability', 'shield'],
+                charity: ['charity', 'charitable', 'philanthropy', 'donate', 'giving', 'foundation', 'nonprofit'],
+                control: ['control', 'flexibility', 'flexible', 'maintain control', 'keep control', 'retain control'],
+                family: ['children', 'kids', 'family', 'heirs', 'beneficiaries', 'next generation', 'grandchildren'],
+                business: ['business', 'company', 'professional', 'practice', 'entrepreneur', 'business owner']
             },
-            '1m-1.5m': {
-                highly_suitable: ['revocable_living', 'minors_trust', 'spendthrift', 'ilit', 'dapt'],
-                suitable: ['grat', 'crt', 'qprt'],
-                consider_carefully: ['fapt'],
-                not_recommended: []
+            concerns: {
+                lawsuits: ['lawsuit', 'litigation', 'malpractice', 'liability', 'legal risk', 'professional risk'],
+                creditors: ['creditor', 'debt', 'bankruptcy', 'financial risk', 'collection'],
+                spendthrift: ['spendthrift', 'irresponsible', 'wasteful spending', 'financial irresponsibility', 'protect from themselves'],
+                incapacity: ['incapacity', 'disability', 'incapacitated', 'unable to manage', 'dementia', 'alzheimer'],
+                privacy: ['privacy', 'private', 'confidential', 'anonymous', 'discrete', 'public records']
             },
-            '1.5m-2m': {
-                highly_suitable: ['revocable_living', 'minors_trust', 'spendthrift', 'ilit', 'dapt', 'grat'],
-                suitable: ['crt', 'qprt', 'fapt'],
-                consider_carefully: [],
-                not_recommended: []
-            },
-            '2m-3m': {
-                highly_suitable: ['revocable_living', 'minors_trust', 'spendthrift', 'ilit', 'dapt', 'grat', 'crt', 'qprt'],
-                suitable: ['fapt'],
-                consider_carefully: [],
-                not_recommended: []
-            },
-            '3m+': {
-                highly_suitable: ['revocable_living', 'minors_trust', 'spendthrift', 'ilit', 'dapt', 'grat', 'crt', 'qprt', 'fapt'],
-                suitable: [],
-                consider_carefully: [],
-                not_recommended: []
+            family: {
+                spouse: ['spouse', 'husband', 'wife', 'married', 'partner'],
+                children: ['children', 'kids', 'child', 'son', 'daughter', 'minor'],
+                grandchildren: ['grandchildren', 'grandkids', 'grandchild', 'next generation']
             }
         };
 
-        function setIncome() {
-            const select = document.getElementById('incomeSelect');
-            if (!select.value) {
-                alert('Please select your income range first.');
-                return;
-            }
-            
-            userIncome = select.value;
-            document.getElementById('selectedIncome').textContent = incomeLabels[userIncome];
-            document.getElementById('incomeSection').style.display = 'none';
-            document.getElementById('questionOptions').style.display = 'block';
-            
-            addMessage(`Great! Based on your income range of ${incomeLabels[userIncome]}, I'll provide personalized trust recommendations. What's your primary goal?`);
-        }
-
-        function changeIncome() {
-            userIncome = '';
-            document.getElementById('incomeSection').style.display = 'block';
-            document.getElementById('questionOptions').style.display = 'none';
-            document.getElementById('incomeSelect').value = '';
-        }
-
-        function getIncomeFeedback(trustKey) {
-            if (!userIncome || !incomeSuitability[userIncome]) return '';
-            
-            const suitability = incomeSuitability[userIncome];
-            
-            if (suitability.highly_suitable.includes(trustKey)) {
-                return {
-                    level: 'excellent',
-                    message: '🎯 Excellent fit for your income level! This trust strategy is highly recommended for your financial situation.',
-                    color: 'text-green-700 bg-green-50 border-green-200'
-                };
-            } else if (suitability.suitable.includes(trustKey)) {
-                return {
-                    level: 'good',
-                    message: '✅ Good fit for your income level. This strategy can work well with proper planning.',
-                    color: 'text-blue-700 bg-blue-50 border-blue-200'
-                };
-            } else if (suitability.consider_carefully.includes(trustKey)) {
-                return {
-                    level: 'caution',
-                    message: '⚠️ Consider carefully. This strategy may be complex or expensive relative to your income level.',
-                    color: 'text-yellow-700 bg-yellow-50 border-yellow-200'
-                };
-            } else if (suitability.not_recommended.includes(trustKey)) {
-                return {
-                    level: 'not_recommended',
-                    message: '❌ Not typically recommended for your income level. Consider simpler alternatives first.',
-                    color: 'text-red-700 bg-red-50 border-red-200'
-                };
-            }
-            
-            return '';
-        }
-
-        function addMessage(content, isUser = false) {
-            const messagesDiv = document.getElementById('messages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `mb-4 ${isUser ? 'text-right' : 'text-left'}`;
-            
-            const bubble = document.createElement('div');
-            bubble.className = `inline-block p-4 rounded-lg max-w-2xl ${
-                isUser ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-800'
-            }`;
-            bubble.innerHTML = content;
-            
-            messageDiv.appendChild(bubble);
-            messagesDiv.appendChild(messageDiv);
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }
-
-        function showRecommendation(trustKey) {
-            const trust = trustDatabase[trustKey];
-            if (!trust) return;
-
-            const incomeFeedback = getIncomeFeedback(trustKey);
-            const incomeFeedbackHTML = incomeFeedback ? `
-                <div class="mb-4 p-4 rounded-lg border ${incomeFeedback.color}">
-                    <p class="font-medium">Income-Based Assessment for ${incomeLabels[userIncome]}:</p>
-                    <p class="text-sm mt-1">${incomeFeedback.message}</p>
-                </div>
-            ` : '';
-
-            const recommendationHTML = `
-                <div class="recommendation-card p-6 rounded-lg">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <span class="text-3xl">${trust.icon}</span>
-                        <div>
-                            <h3 class="text-xl font-bold text-green-800">${trust.name}</h3>
-                            <p class="text-sm text-green-600 font-medium">${trust.category}</p>
-                        </div>
-                    </div>
-                    
-                    ${incomeFeedbackHTML}
-                    
-                    <p class="text-gray-700 mb-4">${trust.description}</p>
-                    
-                    <div class="grid md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <h4 class="font-semibold text-gray-800 mb-2">Key Benefits:</h4>
-                            <ul class="text-sm text-gray-600 space-y-1">
-                                ${trust.benefits.map(benefit => `
-                                    <li class="flex items-start space-x-2">
-                                        <span class="text-green-500 mt-1">✓</span>
-                                        <span>${benefit}</span>
-                                    </li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                        
-                        <div class="space-y-3">
-                            <div>
-                                <span class="font-semibold text-gray-800">Best For: </span>
-                                <span class="text-gray-600">${trust.bestFor}</span>
-                            </div>
-                            <div>
-                                <span class="font-semibold text-gray-800">Typical Income Range: </span>
-                                <span class="text-green-600 font-medium">${trust.incomeRange}</span>
-                            </div>
-                            <div>
-                                <span class="font-semibold text-gray-800">Your Income: </span>
-                                <span class="text-blue-600 font-medium">${incomeLabels[userIncome]}</span>
-                            </div>
-                            <div>
-                                <span class="font-semibold text-gray-800">Complexity: </span>
-                                <span class="font-medium text-yellow-600">${trust.complexity}</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                        <p class="text-blue-800 font-medium">💡 Next Steps:</p>
-                        <p class="text-blue-700 text-sm mt-1">
-                            Consult with an estate planning attorney and tax advisor to customize this trust structure for your specific situation and income level.
-                        </p>
-                    </div>
-                    
-                    <div class="flex space-x-3 mt-4">
-                        <button onclick="resetChat()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors">
-                            Start New Assessment
-                        </button>
-                        <button onclick="showAlternatives('${trustKey}')" class="bg-gray-600 hover:bg-gray-700 text-white px-6 py-2 rounded-lg transition-colors">
-                            Show Alternatives
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            addMessage(recommendationHTML);
-            document.getElementById('questionOptions').style.display = 'none';
-        }
-
-        function showAlternatives(currentTrustKey) {
-            if (!userIncome) return;
-            
-            const suitability = incomeSuitability[userIncome];
-            const alternatives = suitability.highly_suitable.filter(key => key !== currentTrustKey).slice(0, 3);
-            
-            if (alternatives.length === 0) {
-                addMessage('No specific alternatives for your income range. The recommended trust above is your best option.');
-                return;
-            }
-            
-            const alternativesHTML = `
-                <div class="bg-gray-50 p-6 rounded-lg border border-gray-200">
-                    <h3 class="text-lg font-bold text-gray-800 mb-4">🔄 Alternative Trusts for Your Income Range (${incomeLabels[userIncome]}):</h3>
-                    <div class="space-y-3">
-                        ${alternatives.map(trustKey => {
-                            const trust = trustDatabase[trustKey];
-                            return `
-                                <div class="bg-white p-4 rounded-lg border border-gray-200 hover:border-blue-300 transition-colors">
-                                    <div class="flex items-center space-x-3">
-                                        <span class="text-2xl">${trust.icon}</span>
-                                        <div class="flex-1">
-                                            <h4 class="font-semibold text-gray-800">${trust.name}</h4>
-                                            <p class="text-sm text-gray-600 mt-1">${trust.description}</p>
-                                        </div>
-                                        <button onclick="showRecommendation('${trustKey}')" 
-                                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm transition-colors">
-                                            View Details
-                                        </button>
-                                    </div>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-            
-            addMessage(alternativesHTML);
-        }
-
-        function selectGoal(goal) {
-            const goalLabels = {
-                'probate': '📋 Probate Avoidance & Control',
-                'protection': '🛡️ Asset Protection',
-                'tax': '💵 Tax Minimization',
-                'charity': '❤️ Charitable Giving',
-                'realestate': '🏡 Real Estate Transfer',
-                'international': '🌐 International Planning'
+        function analyzeUserInput(text) {
+            const analysis = {
+                income: null,
+                incomeRange: '',
+                goals: [],
+                concerns: [],
+                family: {},
+                confidence: 0
             };
 
-            addMessage(goalLabels[goal], true);
-            document.getElementById('questionOptions').style.display = 'none';
+            const lowerText = text.toLowerCase();
 
-            setTimeout(() => {
-                if (goal === 'probate') {
-                    addMessage('Do you need asset management for minor children, or general probate avoidance?');
-                    showSubOptions([
-                        {label: 'General probate avoidance with full control', action: () => showRecommendation('revocable_living')},
-                        {label: 'Asset management for minor children', action: () => showRecommendation('minors_trust')}
-                    ]);
-                } else if (goal === 'protection') {
-                    addMessage('What type of asset protection do you need?');
-                    showSubOptions([
-                        {label: 'Protection from lawsuits/creditors', action: () => showRecommendation('dapt')},
-                        {label: 'Protect inheritance from spendthrift heirs', action: () => showRecommendation('spendthrift')}
-                    ]);
-                } else if (goal === 'tax') {
-                    addMessage('What\'s your primary tax planning objective?');
-                    showSubOptions([
-                        {label: 'Transfer growth of appreciating assets', action: () => showRecommendation('grat')},
-                        {label: 'Remove life insurance from estate', action: () => showRecommendation('ilit')}
-                    ]);
-                } else if (goal === 'charity') {
-                    showRecommendation('crt');
-                } else if (goal === 'realestate') {
-                    showRecommendation('qprt');
-                } else if (goal === 'international') {
-                    showRecommendation('fapt');
+            // Extract income
+            analysis.income = keywordMapping.income.extract(text);
+            if (analysis.income) {
+                if (analysis.income >= 3000000) analysis.incomeRange = '$3M+';
+                else if (analysis.income >= 2000000) analysis.incomeRange = '$2M-$3M';
+                else if (analysis.income >= 1500000) analysis.incomeRange = '$1.5M-$2M';
+                else if (analysis.income >= 1000000) analysis.incomeRange = '$1M-$1.5M';
+                else if (analysis.income >= 750000) analysis.incomeRange = '$750K-$1M';
+                else if (analysis.income >= 500000) analysis.incomeRange = '$500K-$750K';
+                else analysis.incomeRange = 'Under $500K';
+                analysis.confidence += 30;
+            }
+
+            // Extract goals
+            for (let [goalType, keywords] of Object.entries(keywordMapping.goals)) {
+                if (keywords.some(keyword => lowerText.includes(keyword))) {
+                    analysis.goals.push(goalType);
+                    analysis.confidence += 15;
                 }
-            }, 500);
+            }
+
+            // Extract concerns
+            for (let [concernType, keywords] of Object.entries(keywordMapping.concerns)) {
+                if (keywords.some(keyword => lowerText.includes(keyword))) {
+                    analysis.concerns.push(concernType);
+                    analysis.confidence += 10;
+                }
+            }
+
+            // Extract family information
+            for (let [familyType, keywords] of Object.entries(keywordMapping.family)) {
+                if (keywords.some(keyword => lowerText.includes(keyword))) {
+                    analysis.family[familyType] = true;
+                    analysis.confidence += 5;
+                }
+            }
+
+            return analysis;
         }
 
-        function showSubOptions(options) {
-            const optionsHTML = `
-                <div class="mt-4 space-y-2">
-                    ${options.map((option, index) => `
-                        <button onclick="subOptionActions[${index}]()" 
-                                class="block w-full text-left p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-colors">
-                            ${option.label}
-                        </button>
-                    `).join('')}
-                </div>
-            `;
+        function generateTrustRecommendations(analysis) {
+            const recommendations = [];
             
-            addMessage(optionsHTML);
+            // Scoring system for each trust type
+            const trustScores = {};
+            Object.keys(trustDatabase).forEach(key => {
+                trustScores[key] = { score: 0, reasons: [] };
+            });
+
+            // Income-based scoring
+            const income = analysis.income || 0;
+            if (income >= 500000) {
+                trustScores.revocable_living.score += 20;
+                trustScores.revocable_living.reasons.push('Income level supports trust planning');
+            }
+            if (income >= 750000) {
+                trustScores.minors_trust.score += 15;
+                trustScores.spendthrift.score += 15;
+                trustScores.ilit.score += 10;
+            }
+            if (income >= 1000000) {
+                trustScores.dapt.score += 20;
+                trustScores.grat.score += 15;
+                trustScores.crt.score += 15;
+                trustScores.qprt.score += 15;
+            }
+            if (income >= 1500000) {
+                trustScores.idgt.score += 25;
+                trustScores.clt.score += 10;
+            }
+            if (income >= 3000000) {
+                trustScores.fapt.score += 15;
+                trustScores.clt.score += 15;
+            }
+
+            // Goal-based scoring
+            analysis.goals.forEach(goal => {
+                switch(goal) {
+                    case 'probate':
+                        trustScores.revocable_living.score += 40;
+                        trustScores.revocable_living.reasons.push('Perfect for probate avoidance');
+                        break;
+                    case 'tax':
+                        trustScores.grat.score += 35;
+                        trustScores.ilit.score += 30;
+                        trustScores.idgt.score += 35;
+                        trustScores.crt.score += 25;
+                        trustScores.grat.reasons.push('Excellent for tax-efficient wealth transfer');
+                        trustScores.ilit.reasons.push('Removes life insurance from taxable estate');
+                        break;
+                    case 'protection':
+                        trustScores.dapt.score += 40;
+                        trustScores.spendthrift.score += 30;
+                        trustScores.fapt.score += 25;
+                        trustScores.dapt.reasons.push('Strong creditor protection');
+                        break;
+                    case 'charity':
+                        trustScores.crt.score += 40;
+                        trustScores.clt.score += 35;
+                        trustScores.crt.reasons.push('Perfect for charitable giving with income');
+                        break;
+                    case 'control':
+                        trustScores.revocable_living.score += 25;
+                        trustScores.revocable_living.reasons.push('Maintains complete control and flexibility');
+                        break;
+                    case 'family':
+                        trustScores.minors_trust.score += 30;
+                        trustScores.spendthrift.score += 20;
+                        trustScores.minors_trust.reasons.push('Ideal for families with minor children');
+                        break;
+                    case 'business':
+                        trustScores.dapt.score += 25;
+                        trustScores.grat.score += 20;
+                        trustScores.dapt.reasons.push('Important for business owners facing liability');
+                        break;
+                }
+            });
+
+            // Concern-based scoring
+            analysis.concerns.forEach(concern => {
+                switch(concern) {
+                    case 'lawsuits':
+                        trustScores.dapt.score += 35;
+                        trustScores.fapt.score += 20;
+                        trustScores.dapt.reasons.push('Protects against future lawsuit claims');
+                        break;
+                    case 'spendthrift':
+                        trustScores.spendthrift.score += 40;
+                        trustScores.spendthrift.reasons.push('Prevents beneficiary wasteful spending');
+                        break;
+                    case 'incapacity':
+                        trustScores.revocable_living.score += 20;
+                        trustScores.revocable_living.reasons.push('Provides seamless incapacity management');
+                        break;
+                    case 'privacy':
+                        trustScores.revocable_living.score += 15;
+                        trustScores.dapt.score += 10;
+                        break;
+                }
+            });
+
+            // Family-based scoring
+            if (analysis.family.children) {
+                trustScores.minors_trust.score += 25;
+                trustScores.spendthrift.score += 15;
+                trustScores.minors_trust.reasons.push('Has minor children who would benefit');
+            }
+
+            // Convert scores to recommendations
+            const sortedTrusts = Object.entries(trustScores)
+                .filter(([key, data]) => data.score > 10)
+                .sort(([,a], [,b]) => b.score - a.score)
+                .slice(0, 4);
+
+            return sortedTrusts.map(([trustKey, data]) => ({
+                trust: trustDatabase[trustKey],
+                trustKey: trustKey,
+                score: data.score,
+                reasons: data.reasons,
+                suitability: data.score >= 60 ? 'excellent' : data.score >= 40 ? 'good' : 'consider'
+            }));
+        }
+
+        function addMessage(content, isUser = false, delay = 0) {
+            setTimeout(() => {
+                const messagesDiv = document.getElementById('messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `chat-message mb-4 ${isUser ? 'text-right' : 'text-left'}`;
+                
+                const bubble = document.createElement('div');
+                bubble.className = `inline-block p-4 rounded-xl max-w-4xl shadow-md ${
+                    isUser 
+                        ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-br-md' 
+                        : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+                }`;
+                bubble.innerHTML = content;
+                
+                messageDiv.appendChild(bubble);
+                messagesDiv.appendChild(messageDiv);
+                
+                const chatContainer = document.getElementById('chatContainer');
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }, delay);
+        }
+
+        function showTyping() {
+            document.getElementById('typingIndicator').classList.remove('hidden');
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTyping() {
+            document.getElementById('typingIndicator').classList.add('hidden');
+        }
+
+        function displayAnalysis(analysis, recommendations) {
+            // Update analysis panel
+            document.getElementById('detectedIncome').textContent = analysis.incomeRange || 'Not specified';
+            document.getElementById('detectedGoals').textContent = analysis.goals.length > 0 ? 
+                analysis.goals.map(g => g.charAt(0).toUpperCase() + g.slice(1)).join(', ') : 'General planning';
+            document.getElementById('detectedFactors').textContent = analysis.concerns.length > 0 ? 
+                analysis.concerns.map(c => c.charAt(0).toUpperCase() + c.slice(1)).join(', ') : 'Standard considerations';
+
+            // Show analysis panel
+            document.getElementById('analysisPanel').classList.remove('hidden');
+
+            // Display recommendations
+            const recommendationsDiv = document.getElementById('trustRecommendations');
+            recommendationsDiv.innerHTML = '';
+
+            recommendations.forEach((rec, index) => {
+                const trust = rec.trust;
+                const suitabilityClass = rec.suitability === 'excellent' ? 'trust-score' : 
+                                       rec.suitability === 'good' ? 'warning-score' : 'danger-score';
+                const suitabilityText = rec.suitability === 'excellent' ? 'Excellent Match' : 
+                                       rec.suitability === 'good' ? 'Good Fit' : 'Consider Carefully';
+
+                const recommendationHTML = `
+                    <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-shadow duration-300">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-4">
+                                    <div class="text-4xl">${trust.icon}</div>
+                                    <div>
+                                        <h3 class="text-2xl font-bold text-gray-800">${trust.name}</h3>
+                                        <p class="text-gray-600 font-medium">${trust.category}</p>
+                                    </div>
+                                </div>
+                                <div class="${suitabilityClass} text-white px-4 py-2 rounded-full text-sm font-bold">
+                                    ${Math.round(rec.score)}% • ${suitabilityText}
+                                </div>
+                            </div>
+
+                            <p class="text-gray-700 text-lg mb-4">${trust.description}</p>
+
+                            <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                                <h4 class="font-semibold text-blue-800 mb-2">🎯 Why This Matches Your Situation:</h4>
+                                <ul class="text-blue-700 text-sm space-y-1">
+                                    ${rec.reasons.map(reason => `<li class="flex items-start space-x-2">
+                                        <span class="text-blue-500 mt-1">•</span><span>${reason}</span>
+                                    </li>`).join('')}
+                                </ul>
+                            </div>
+
+                            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2">💰 Financial Impact</h4>
+                                    <p class="text-sm text-gray-600 mb-1"><span class="font-medium">Setup:</span> ${trust.setupCost}</p>
+                                    <p class="text-sm text-gray-600 mb-1"><span class="font-medium">Annual:</span> ${trust.annualCost}</p>
+                                    <p class="text-sm text-gray-600"><span class="font-medium">Tax Benefits:</span> ${trust.taxBenefits}</p>
+                                </div>
+                                
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2">🛡️ Protection Level</h4>
+                                    <p class="text-sm text-gray-600 mb-1"><span class="font-medium">Asset Protection:</span> ${trust.assetProtection}</p>
+                                    <p class="text-sm text-gray-600 mb-1"><span class="font-medium">Complexity:</span> ${trust.complexity}</p>
+                                    <p class="text-sm text-gray-600"><span class="font-medium">Income Range:</span> ${trust.incomeRange}</p>
+                                </div>
+
+                                <div class="bg-gray-50 p-4 rounded-lg md:col-span-2 lg:col-span-1">
+                                    <h4 class="font-semibold text-gray-800 text-sm mb-2">⚠️ Key Considerations</h4>
+                                    <ul class="text-xs text-gray-600 space-y-1">
+                                        ${trust.warnings.slice(0, 3).map(warning => `
+                                            <li class="flex items-start space-x-1">
+                                                <span class="text-yellow-500 mt-0.5">⚠</span>
+                                                <span>${warning}</span>
+                                            </li>
+                                        `).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <details class="mb-4">
+                                <summary class="cursor-pointer font-semibold text-gray-800 hover:text-blue-600 transition-colors">
+                                    📋 View Detailed Benefits & Requirements
+                                </summary>
+                                <div class="mt-4 grid md:grid-cols-2 gap-4">
+                                    <div>
+                                        <h4 class="font-semibold text-green-800 mb-2">✅ Detailed Benefits:</h4>
+                                        <ul class="text-sm text-gray-600 space-y-1">
+                                            ${trust.detailedBenefits.map(benefit => `
+                                                <li class="flex items-start space-x-2">
+                                                    <span class="text-green-500 mt-1">✓</span>
+                                                    <span>${benefit}</span>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-semibold text-orange-800 mb-2">📋 Key Requirements:</h4>
+                                        <ul class="text-sm text-gray-600 space-y-1">
+                                            ${trust.keyRequirements.map(req => `
+                                                <li class="flex items-start space-x-2">
+                                                    <span class="text-orange-500 mt-1">•</span>
+                                                    <span>${req}</span>
+                                                </li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <div class="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
+                                <h4 class="font-semibold text-green-800 mb-2">🚀 Next Steps:</h4>
+                                <p class="text-green-700 text-sm mb-3">
+                                    Based on your ${analysis.incomeRange} income and goals, here's what to do next:
+                                </p>
+                                <ol class="text-green-700 text-sm space-y-1 ml-4">
+                                    <li>1. Consult with an estate planning attorney specializing in ${trust.category.toLowerCase()}</li>
+                                    <li>2. Get professional asset valuation if needed</li>
+                                    <li>3. Review tax implications with your CPA</li>
+                                    <li>4. Consider ${trust.complexity === 'Low-Medium' ? 'simple implementation' : 'phased implementation approach'}</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                recommendationsDiv.innerHTML += recommendationHTML;
+            });
+        }
+
+        function processUserMessage(message) {
+            // Add user message
+            addMessage(message, true);
             
-            // Store actions globally for onclick access
-            window.subOptionActions = options.map(option => option.action);
+            // Add to conversation history
+            conversationHistory.push({ role: 'user', content: message });
+            
+            // Show typing indicator
+            showTyping();
+            
+            setTimeout(() => {
+                hideTyping();
+                
+                // Analyze the input
+                const analysis = analyzeUserInput(message);
+                
+                // Update user profile
+                if (analysis.income) userProfile.income = analysis.income;
+                if (analysis.incomeRange) userProfile.incomeRange = analysis.incomeRange;
+                userProfile.goals = [...new Set([...userProfile.goals, ...analysis.goals])];
+                userProfile.concerns = [...new Set([...userProfile.concerns, ...analysis.concerns])];
+                Object.assign(userProfile.family, analysis.family);
+                
+                // Generate recommendations
+                const recommendations = generateTrustRecommendations(analysis);
+                
+                if (recommendations.length === 0) {
+                    addMessage("I need a bit more information to provide accurate recommendations. Could you tell me more about your income level, specific goals, or concerns?");
+                    return;
+                }
+                
+                // Provide analysis summary
+                let summaryMessage = `<div class="space-y-3">
+                    <h3 class="text-lg font-bold text-gray-800">🔍 Analysis Complete</h3>
+                    <p class="text-gray-700">Based on your message, I've identified:</p>
+                    <ul class="text-sm text-gray-600 space-y-1 ml-4">`;
+                
+                if (analysis.incomeRange) {
+                    summaryMessage += `<li><span class="font-medium">Income Range:</span> ${analysis.incomeRange}</li>`;
+                }
+                if (analysis.goals.length > 0) {
+                    summaryMessage += `<li><span class="font-medium">Primary Goals:</span> ${analysis.goals.join(', ')}</li>`;
+                }
+                if (analysis.concerns.length > 0) {
+                    summaryMessage += `<li><span class="font-medium">Key Concerns:</span> ${analysis.concerns.join(', ')}</li>`;
+                }
+                
+                summaryMessage += `</ul>
+                    <p class="text-gray-700 font-medium">I've found ${recommendations.length} trust strategies that match your situation with confidence levels of ${Math.round(analysis.confidence)}%.</p>
+                </div>`;
+                
+                addMessage(summaryMessage);
+                
+                // Display detailed analysis and recommendations
+                setTimeout(() => {
+                    displayAnalysis(analysis, recommendations);
+                }, 1000);
+                
+            }, 1500);
         }
 
         function sendMessage() {
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             if (!message) return;
-
-            addMessage(message, true);
+            
             input.value = '';
+            processUserMessage(message);
+        }
 
-            setTimeout(() => {
-                addMessage('Thanks for your question! For the most accurate recommendation, please use the guided questions above. Would you like to start a new assessment?');
-            }, 500);
+        function quickInput(text) {
+            document.getElementById('userInput').value = text;
+            sendMessage();
         }
 
         function resetChat() {
-            userIncome = '';
-            document.getElementById('messages').innerHTML = `
-                <div class="mb-4">
-                    <div class="bg-gray-100 p-4 rounded-lg max-w-2xl">
-                        <p class="text-gray-800">Hello! I'm your Trust Advisor. I'll help you find the perfect trust structure based on your goals and income. Let's start by understanding your financial situation:</p>
+            // Reset all variables
+            conversationHistory = [];
+            userProfile = {
+                income: null,
+                incomeRange: '',
+                goals: [],
+                concerns: [],
+                family: {},
+                assets: {},
+                businessOwner: false,
+                riskTolerance: '',
+                timeHorizon: ''
+            };
+            
+            // Reset UI
+            document.getElementById('messages').innerHTML = '';
+            document.getElementById('analysisPanel').classList.add('hidden');
+            document.getElementById('userInput').value = '';
+            
+            // Add initial message
+            addMessage(`
+                <div class="space-y-4">
+                    <h3 class="text-xl font-bold text-gray-800">👋 Welcome to AI Trust Advisor Pro</h3>
+                    <p class="text-gray-700">I'm your intelligent trust planning assistant. I'll analyze your unique situation and recommend the perfect trust strategies.</p>
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h4 class="font-semibold text-blue-800 mb-2">How it works:</h4>
+                        <ol class="text-blue-700 text-sm space-y-1">
+                            <li>1. Tell me about your income, goals, and concerns in natural language</li>
+                            <li>2. I'll analyze your situation using advanced algorithms</li>
+                            <li>3. Receive personalized trust recommendations with detailed explanations</li>
+                            <li>4. Get specific next steps and professional guidance</li>
+                        </ol>
                     </div>
+                    <p class="text-gray-600 text-sm">💡 <strong>Example:</strong> "I make $1.2M annually, own a medical practice, have two young children, and want to avoid probate while protecting against malpractice lawsuits."</p>
                 </div>
-            `;
-            document.getElementById('incomeSection').style.display = 'block';
-            document.getElementById('questionOptions').style.display = 'none';
-            document.getElementById('incomeSelect').value = '';
+            `);
         }
 
-        // Enable Enter key for input
-        document.getElementById('userInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
+        // Initialize chat on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            resetChat();
+            
+            // Enable Enter key for input
+            document.getElementById('userInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
         });
     </script>
 </body>
 </html>
+            
+     
